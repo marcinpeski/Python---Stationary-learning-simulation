@@ -10,7 +10,7 @@ x_min = 1e-5
 eq_gamma = 1e-3
 
 K = 100
-K_show = 100000
+K_show = 10000
 
 def psi(x, n, k):
     return x**k * (1-x)**(n-k)
@@ -43,9 +43,9 @@ class StrategyClass:
     #prepare a list of few alphas for detailed nalysis
     def alphas_show(self):
         amin, amax = self.alpha_range()
-        if amin<amax:
+        if amin<=amax:
             if self.n<=4:
-                return np.linspace(amin, amax, 10)
+                return np.arange(amin, amax, 0.01)
         else:
             return []
         

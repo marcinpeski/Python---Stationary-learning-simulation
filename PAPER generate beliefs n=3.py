@@ -7,12 +7,15 @@
 #   plot of beliefs for different values of pi,
 
 
-n_grid = 100
-n_density = 20000
-no_bins = 200
+n_alphas = 400
+n_pis = 400
+
 epsilon = 1e-4
 delta = 1e-3
 pi = 0.8
+first_pi = 0.51
+
+
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -60,21 +63,19 @@ def compute_beliefs_for_alpha(pi=0.55, n=3, alpha = 0.3):
     if not fail:
         psi_data = {k: [psi(x, k, n) for x in data] for k in range(1,n)}
         psi_sum = {k:np.sum(psi_data[k], axis=0) for k in psi_data}
-        psi1 = np.sum(psi(all_xs,1  , n))
-        psi2 = np.sum(psi(all_xs,2  , n))
         p1 = psi_sum[1]/(psi_sum[1]+psi_sum[2])
         p1_range = (min(p1), max(p1))
         g0 = 3*(max(0,-alpha)+(1-pi)*(1-abs(alpha)))
         g1 = 3*(max(0,-alpha)+pi*(1-abs(alpha)))
-        p0 = np.log(g1)/(-np.log(g0)+np.log(g1))
+        p0 = -np.log(g0)/(-np.log(g0)+np.log(g1))
         return p0, p1_range
     else:
         return None
 
 def compute_beliefs(pi):
     alpha_min, alpha_max = alpha_range(pi)
-    alpha_min, alpha_max = alpha_min + epsilon, alpha_max - epsilon
-    alphas = np.linspace(alpha_min, alpha_max, 100)
+    alpha_min, alpha_max = alpha_min + delta, alpha_max - delta
+    alphas = np.linspace(alpha_min, alpha_max, n_alphas)
     if alpha_min<=0<=alpha_max:
         alphas = np.append(alphas, 0)
     beliefs = {}
@@ -83,7 +84,7 @@ def compute_beliefs(pi):
         beliefs[alpha] =compute_beliefs_for_alpha(pi, alpha=alpha)
     return beliefs
 
-pis = np.linspace(0.53, 1, 200)
+pis = np.linspace(first_pi, 1, n_pis)
 beliefs = {pi:None for pi in pis}
 for pi in pis:
     beliefs[pi] = compute_beliefs(pi)
