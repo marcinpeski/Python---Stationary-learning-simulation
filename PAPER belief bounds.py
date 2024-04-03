@@ -97,8 +97,8 @@ def generate_plots(n=3, pi_show = 0.9, alpha = False):
     #Draw transition functions
     f = 0
     axs[f].set_xlabel('$x$')
-    axs[f].set_ylabel(f'$g_1(x)$ for $\pi={pi_show:.2f}$')
-    axs[f].grid()
+    axs[f].set_ylabel(f'$g_0(x)$, $g_1(x)$ for $\pi={pi_show:.2f}$')
+    axs[f].grid(False)
     axs[f].plot(np.linspace(epsilon, 1-epsilon, n_grid), 1-g_1(1-np.linspace(epsilon, 1-epsilon, n_grid), pi=pi_show, n=n), label = f'$g_0$')
     axs[f].plot(np.linspace(epsilon, 1-epsilon, n_grid), g_1(np.linspace(epsilon, 1-epsilon, n_grid), pi=pi_show, n=n), label = f'$g_1$')
     axs[f].legend(loc='best', frameon=False)
@@ -106,19 +106,17 @@ def generate_plots(n=3, pi_show = 0.9, alpha = False):
     #Draw densities
     f = 1
     axs[f].set_xlabel('$x$')
-    axs[f].set_ylabel('Log density')
-    axs[f].grid()
-    axs[f].set_title(f'log densities when $\pi={pi_show}$')
+    axs[f].set_ylabel(f'$log(f_0)(x)$, $log(f_1)(x)$ for $\pi={pi_show:.2f}$')
+    axs[f].grid(False)
     axs[f].plot(np.linspace(delta, 1-delta, no_bins), d0, label='$log(f_0)$')
     axs[f].plot(np.linspace(delta, 1-delta, no_bins), d1, label='$log(f_1)$')
     axs[f].legend(loc='best', frameon=False)
 
     #Draw beliefs
     f = 2
-    axs[f].set_xlabel('$\pi$')
-    axs[f].set_ylabel('beliefs')
-    axs[f].grid()
-    axs[f].set_title(f'$n={n}$')
+    axs[f].set_xlabel('precision $\pi$')
+    axs[f].set_ylabel('equilibrium beliefs')
+    axs[f].grid(False)
     axs[f].set_ylim(0,1)
     p_min = {k:[ranges[pi][k][0] for pi in pis] for k in range(1,n)}
     p_max = {k:[ranges[pi][k][1] for pi in pis] for k in range(1,n)}
@@ -129,16 +127,20 @@ def generate_plots(n=3, pi_show = 0.9, alpha = False):
         axs[f].plot(pis, p_max[k], color=color)
         axs[f].fill_between(pis, p_min[k], p_max[k], alpha=0.5, facecolor=color)
     axs[f].legend(loc='best', frameon=False)
+
+    for a in axs:
+        a.spines['right'].set_visible(False)
+        a.spines['top'].set_visible(False)
         
     return fig, axs
 
 
 pi_show = 0.99
-alpha = 0.2
+alpha = 0
 for n in [3]:
     fig, axs = generate_plots(n=n, pi_show = pi_show, alpha = alpha)
     plt.tight_layout()
-    plt.savefig(f'figures/belief_bounds n={n} alpha={alpha}.png')
+    plt.savefig(f'figures/belief_bounds n={n}.png')
     #plt.show()
 
 

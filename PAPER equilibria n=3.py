@@ -57,7 +57,7 @@ def payoffs(pi, alpha, beliefs):
     return payoffs
 
 equilibria = {pi:{alpha:payoffs(pi, alpha, beliefs[pi][alpha]) for alpha in profiles[pi]} for pi in profiles if pi < 1}
-test_cs = [0, 0.1]
+test_cs = [0, 0.1, 0.3]
 payoff = {c:{} for c in test_cs}
 for c in test_cs:
     for pi in equilibria:
@@ -79,11 +79,11 @@ for region in regions:
 colors, hatching, transparency = {}, {}, {}
 for region in regions:
     if region[1] == '0':
-        colors[region] = 'yellow'
-        transparency[region] = 1
+        colors[region] = 'green'
+        transparency[region] = 0.6
     else:
-        colors[region] = 'blue'
-        transparency[region] = 0.8
+        colors[region] = 'orange'
+        transparency[region] = 0.6
     if region[0] == '+':
         hatching[region] = '---'
     elif region[0] == '0':
@@ -91,34 +91,44 @@ for region in regions:
     else:
         hatching[region] = '|||'
 legend_elements = [
-    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=10, label=f'$\\beta_0>0$'),
-    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='yellow', markersize=10, label=f'$\\beta_0=0$'),
+    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='orange', markersize=10, label=f'$\\beta(0)>0$'),
+    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='green', markersize=10, label=f'$\\beta(0)=0$'),
 ]
 legend_hatchings = [
-    Patch(facecolor='white', edgecolor='grey', label=f'$\\beta_1=1$'),
-    Patch(facecolor='white', edgecolor='grey', hatch='---', label=f'$\\beta_1<1$, $\\alpha_1 (1/2)=0$'),
-    Patch(facecolor='white', edgecolor='grey', hatch='|||', label=f'$\\beta_1<1$, $\\alpha_1 (1/2)=1$'),
+    Patch(facecolor='white', edgecolor='grey', label=f'$\\beta(1)=1$'),
+    Patch(facecolor='white', edgecolor='grey', hatch='---', label=f'$\\beta(1)<1$, $\\alpha(1, 1/2)=0$'),
+    Patch(facecolor='white', edgecolor='grey', hatch='|||', label=f'$\\beta(1)<1$, $\\alpha(1, 1/2)=1$'),
 ]
+fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+
 for region in ebr:
     pis = list(phat_max_r[region].keys())
     max_vals = [phat_max_r[region][pi] for pi in pis]
     min_vals = [phat_min_r[region][pi] for pi in pis] 
-    plt.fill_between(pis, min_vals, max_vals, alpha=transparency[region], color = colors[region], hatch = hatching[region], edgecolor='grey')
-colors = {0:'red', 0.1:'purple'}
+    ax[0].fill_between(pis, min_vals, max_vals, alpha=transparency[region], color = colors[region], hatch = hatching[region], edgecolor='grey')
+    ax[1].fill_between(pis, min_vals, max_vals, alpha=0.8, facecolor = 'white', edgecolor='lightgrey')
+ax[0].set_ylabel("$\hat{p}$")
+ax[0].set_xlabel("$\pi$")
+legend1 = ax[0].legend(handles=legend_elements, loc='center left', frameon=False)
+legend2 = ax[0].legend(handles=legend_hatchings, loc='upper left', frameon=False)
+ax[0].add_artist(legend1)
+
+colors = {0:'blue', 0.1:'purple', 0.3:'red'}
+linestyle = {0:'-', 0.1:'--', 0.3:':'}
+
 for c in test_cs:
     x = list(payoff[c].keys())
     y = list(payoff[c].values())
-    plt.plot(x, y, ':', label=f'$c={c}$', color = colors[c])
-    plt.text(x[-1], y[-1], f'$c={c}$', va='center', color = colors[c])
+    ax[1].plot(x, y, ':', color = colors[c], linestyle = linestyle[c], label = f'$c={c}$')
+    #ax[1].text(x[-1], y[-1], f'$c={c}$', va='center', color = colors[c])
+ax[1].legend(loc='upper left', frameon=False)
+ax[1].set_ylabel("welfare")
+ax[1].set_xlabel("$\pi$")
 
-plt.ylabel("$\hat{p}$")
-plt.xlabel("$\pi$")
-ax = plt.gca()
-ax.spines['right'].set_visible(False)
-ax.spines['top'].set_visible(False)
-legend1 = plt.legend(handles=legend_elements, loc='upper left', frameon=False)
-ax.add_artist(legend1)
-plt.legend(handles=legend_hatchings, loc='upper right', frameon=False)
+for a in ax:
+    a.spines['right'].set_visible(False)
+    a.spines['top'].set_visible(False)
+
 plt.savefig(f'figures/equilibria n=3 regions.png')
 plt.show()
 
