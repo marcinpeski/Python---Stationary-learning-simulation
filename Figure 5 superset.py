@@ -7,13 +7,6 @@
 #   plot of beliefs for different values of pi,
 
 
-n_grid = 100
-n_density = 20000
-no_bins = 200
-epsilon = 1e-7
-delta = 1e-7
-pi = 0.8
-
 phat_step = 1e-3
 
 import numpy as np
@@ -32,20 +25,18 @@ profiles = {pi:{alpha:beliefs[pi][alpha] for alpha in beliefs[pi]           \
 
 def payoffs(pi, alpha, beliefs):
     
-    if alpha ==0:
-        phat_min=max(beliefs[1][0], 1-beliefs[1][1])
+    if alpha <0:
+        phat_min = max(beliefs[1][0], 0.5)
+        phat_max = min(beliefs[1][1], pi)
+        etype = "-"
+    elif alpha ==0:
+        phat_min=max(beliefs[1][0], 1-beliefs[1][1], 0.5)
         phat_max = pi
         etype = "0"
     elif alpha>0:
-        phat_min = 1-beliefs[1][1]
-        phat_max = 1-beliefs[1][0]
-        etype = "+"
-    else:
-        phat_min = beliefs[1][0]
-        phat_max = beliefs[1][1]
-        etype = "-"
-    phat_min = max(0.5, min(phat_min, pi))
-    phat_max = max(0.5, min(phat_max, pi))
+        phat_min = max(1-beliefs[1][1], 0.5)
+        phat_max = min(1-beliefs[1][0], pi)
+        etype = "+" 
     ps = np.arange(phat_min, phat_max, phat_step)
     p0=beliefs[0]
     def a(phat,p0):
@@ -53,15 +44,32 @@ def payoffs(pi, alpha, beliefs):
             return '0'
         else: 
             return 'A'
-    payoffs = [{'type':etype+a(p,p0), 'payoffs':max(1-p0, p), 'phat':p, 'p0':p0, 'p1':beliefs[1][0]} for p in ps]
+    payoffs = [{'region':etype+a(p,p0), 'payoffs':max(1-p0, p), 'phat':p, 'p0':p0, 'p1':beliefs[1][0]} for p in ps]
     return payoffs
 
-equilibria = {pi:{alpha:payoffs(pi, alpha, beliefs[pi][alpha]) for alpha in profiles[pi]} for pi in profiles if pi < 1}
+def find_equilibria(beliefs):
+    #select for profiles and beliefs only if they satisfy corrollary 1 conditions
+    corollary1 = {pi:{alpha:payoffs(pi, alpha, beliefs[pi][alpha]) for alpha in beliefs[pi]           
+                    if (pi < 1 and beliefs[pi][alpha] is not None and              
+                        ((alpha<0 and beliefs[pi][alpha][1][1] >= 0.5 and beliefs[pi][alpha][1][0] <= pi) or
+                         (alpha==0 and max(beliefs[pi][alpha][1][0], 1-beliefs[pi][alpha][1][0]) <= pi ) or 
+                         (alpha>0 and beliefs[pi][alpha][1][0] <= 0.5 and 1- beliefs[pi][alpha][1][1] <= pi)))} for pi in beliefs}
+    equilibria = {pi:{} for pi in corollary1}
+    for pi in corollary1:
+        for alpha in corollary1[pi]:
+            for e in corollary1[pi][alpha]:
+                if not e['phat'] in equilibria[pi]:
+                    equilibria[pi][e['phat']] = []
+                equilibria[pi][e['phat']].append(e)
+    return equilibria
+
+equilibria = find_equilibria(beliefs)
+
 test_cs = [0, 0.1, 0.3]
 payoff = {c:{} for c in test_cs}
 for c in test_cs:
     for pi in equilibria:
-        available = [e for alpha in equilibria[pi] for e in equilibria[pi][alpha] if e['phat'] <= pi - c]
+        available = [e for phat in equilibria[pi] for e in equilibria[pi][phat] if phat <= pi - c]
         if len(available) > 0:
             payoff[c][pi] = max([e['payoffs'] for e in available])
         else:
@@ -70,7 +78,7 @@ for c in test_cs:
 regions = ['+0', '+A', '00', '0A', '-0', '-A']
 ebr, phat_max_r, phat_min_r = {region:{} for region in regions}, {region:{} for region in regions}, {region:{} for region in regions}
 for region in regions:
-    ebr[region] = {pi:[e for alpha in equilibria[pi] for e in equilibria[pi][alpha] if e['type'] == region] for pi in equilibria}
+    ebr[region] = {pi:[e for phat in equilibria[pi] for e in equilibria[pi][phat] if e['region'] == region] for pi in equilibria}
     for pi in ebr[region]:
         if len(ebr[region][pi]) > 0:        
             phat_max_r[region][pi] = max([e['phat'] for e in ebr[region][pi]])
@@ -129,6 +137,6 @@ for a in ax:
     a.spines['right'].set_visible(False)
     a.spines['top'].set_visible(False)
 
-plt.savefig(f'figures/equilibria n=3 regions.png')
+plt.savefig(f'figures/Figure 5 superset.png')
 plt.show()
 
