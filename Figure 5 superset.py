@@ -47,7 +47,7 @@ def payoffs(pi, alpha, beliefs):
     payoffs = [{'region':etype+a(p,p0), 'payoffs':max(1-p0, p), 'phat':p, 'p0':p0, 'p1':beliefs[1][0]} for p in ps]
     return payoffs
 
-def find_equilibria(beliefs):
+def find_superset_equilibria(beliefs):
     #select for profiles and beliefs only if they satisfy corrollary 1 conditions
     corollary1 = {pi:{alpha:payoffs(pi, alpha, beliefs[pi][alpha]) for alpha in beliefs[pi]           
                     if (pi < 1 and beliefs[pi][alpha] is not None and              
@@ -63,7 +63,7 @@ def find_equilibria(beliefs):
                 equilibria[pi][e['phat']].append(e)
     return equilibria
 
-equilibria = find_equilibria(beliefs)
+equilibria = find_superset_equilibria(beliefs)
 
 test_cs = [0, 0.1, 0.3]
 payoff = {c:{} for c in test_cs}
